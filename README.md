@@ -44,7 +44,7 @@ npx serve .        # запустить локальный сервер
    - `VAPID_SUBJECT` — `mailto:you@example.com`;
    - `CRON_SECRET` — секрет для cron, защищает `/api/notify`.
 4. Подключить **Upstash Redis**: **Project → Storage → Connect Store** → выбрать созданное Upstash Redis. Переменные `UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN` подтянутся автоматически (код уже использует `@upstash/redis`).
-5. Проверить cron: **Project → Cron** — напоминания настроены раз в час (`vercel.json`), точность — до часа.
+5. Настроить напоминания: они приходят через **GitHub Actions** (файл `.github/workflows/notify.yml` дёргает `/api/notify` каждый час). Для этого добавьте секрет `CRON_SECRET` в GitHub: репозиторий → **Settings → Secrets and variables → Actions → New repository secret** (имя `CRON_SECRET`, значение из `.env`). Точность напоминаний — до часа.
 
 **Альтернатива — через CLI:**
 
@@ -71,4 +71,4 @@ vercel deploy --prod
 - `lib/*` — чистая логика (слоты, даты, расписание, хранилище, выгрузка, шов под LLM).
 - `api/subscribe.js`, `api/notify.js` — serverless-функции Vercel (хранение push-подписок в Upstash Redis, отправка напоминаний).
 - `sw.js` — service worker (кэш + показ уведомлений).
-- `vercel.json` — cron-расписание (раз в час).
+- `.github/workflows/notify.yml` — планировщик напоминаний (каждый час, GitHub Actions).
