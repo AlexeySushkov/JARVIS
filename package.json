@@ -1,1 +1,1 @@
-{ "name": "jarvis-pwa", "type": "module", "scripts": { "test": "node --test" } }
+{"name":"jarvis-pwa","type":"module","scripts":{"test":"node --test"},"devDependencies":{"fake-indexeddb":"^6.2.8"}}
