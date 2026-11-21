@@ -26,7 +26,7 @@ npx serve .          # или: python -m http.server
    npm i -g vercel
    vercel login
    ```
-2. Создать хранилище для push-подписок. Внимание: `@vercel/kv` помечен устаревшим — если в аккаунте Vercel нет KV, создайте **Upstash Redis** через Vercel Marketplace (**Storage → Create → Redis/Upstash**); тогда импорт в `api/*.js` надо заменить с `@vercel/kv` на `@upstash/redis` (могу сделать по запросу).
+2. Создать **Upstash Redis** через Vercel Marketplace (**Storage → Create → Redis/Upstash**) и привязать к проекту — переменные `UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN` подтянутся автоматически (код уже использует `@upstash/redis`).
 3. Задать секреты в проекте Vercel (**Settings → Environment Variables**):
    - `VAPID_PUBLIC_KEY` — публичный ключ (уже вшит в `app.js`, но продублируйте для сервера);
    - `VAPID_PRIVATE_KEY` — приватный ключ (см. ниже);
@@ -38,7 +38,7 @@ npx serve .          # или: python -m http.server
    ```bash
    vercel deploy --prod
    ```
-   Расписание напоминаний настроено в `vercel.json` (cron каждые 5 минут → `/api/notify`). Внимание: бесплатный тариф Vercel может ограничивать частоту cron — после деплоя убедитесь, что cron реально запускается раз в ~5 минут; если нет, потребуется внешний планировщик (например GitHub Actions).
+   Расписание напоминаний настроено в `vercel.json` (cron каждый час → `/api/notify`), поэтому напоминания приходят с точностью до часа.
 
 ## Установка на телефон дочери (Android)
 

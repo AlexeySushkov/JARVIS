@@ -1,7 +1,13 @@
 import { setVapidDetails, sendNotification } from 'web-push';
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 import { dueReminders } from '../lib/schedule.js';
 import { SLOTS } from '../lib/slots.js';
+
+let redisClient = null;
+function redis() {
+  if (!redisClient) redisClient = Redis.fromEnv();
+  return redisClient;
+}
 
 function hourLabel(hhmm) { return String(parseInt(hhmm.split(':')[0], 10)); }
 
@@ -33,7 +39,7 @@ export default async function handler(req, res) {
   }
   setVapidDetails(subject, publicKey, privateKey);
 
-  const subs = (await kv.get('push:subscriptions')) || [];
+  const subs = (await redis().get('push:subscriptions')) || [];
   const nowUtc = Date.now();
   const sent = [];
   let skipped = 0;

@@ -1,4 +1,10 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+let redisClient = null;
+function redis() {
+  if (!redisClient) redisClient = Redis.fromEnv();
+  return redisClient;
+}
 
 export function addSubscription(list, entry, max) {
   const next = list.filter((s) => !(s.subscription && s.subscription.endpoint === entry.subscription.endpoint));
@@ -16,7 +22,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'subscription required' });
   }
   const entry = { subscription, offsetMinutes: offsetMinutes || 0 };
-  const subs = addSubscription((await kv.get('push:subscriptions')) || [], entry, 10);
-  await kv.set('push:subscriptions', subs);
+  const subs = addSubscription((await redis().get('push:subscriptions')) || [], entry, 10);
+  await redis().set('push:subscriptions', subs);
   return res.status(200).json({ ok: true });
 }
