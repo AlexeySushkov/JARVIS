@@ -5,8 +5,8 @@ import { getDay, putDay, getAllDays } from './lib/storage.js';
 import { serializeHistory } from './lib/export.js';
 import { parseAnswer } from './lib/jarvis.js';
 
-// Заполняется при деплое (Task 8). Пустая строка = уведомления не настраиваются.
-const VAPID_PUBLIC_KEY = '';
+// Публичный VAPID-ключ. Приватный ключ задаётся в env Vercel (VAPID_PRIVATE_KEY).
+const VAPID_PUBLIC_KEY = 'BF16OyIGb6GAxO-jYHR07H1PBRJ9FFp6Fm5Joe1zFSLLG3TF3up3hwuhNs9To1DGheQ4pyGKzNKh6Q1nDXytxno';
 
 const CHIPS = ['Сон', 'Еда', 'Сборы', 'Дорога', 'Школа', 'Домашка', 'Спорт', 'Прогулка', 'Хобби', 'Общение', 'Отдых', 'Игры/телефон', 'Другое'];
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
