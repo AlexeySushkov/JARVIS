@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>JARVIS</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand"><span class="dot"></span><span>JARVIS</span></div>
+      <div class="orb"></div>
+      <div class="export">
+        <button id="export-json" class="ghost" type="button">JSON</button>
+        <button id="export-csv" class="ghost" type="button">CSV</button>
+      </div>
+    </header>
+
+    <nav class="days" id="days"></nav>
+
+    <section class="day">
+      <div class="day-head">
+        <button id="prev" class="ghost" type="button">‹</button>
+        <div id="day-label" class="day-label"></div>
+        <button id="next" class="ghost" type="button">›</button>
+      </div>
+      <div class="table" id="table"></div>
+      <div class="mood" id="mood"></div>
+    </section>
+  </div>
+
+  <div class="modal" id="modal" hidden>
+    <div class="dialog">
+      <h2 id="dlg-title"></h2>
+      <div class="chips" id="dlg-chips"></div>
+      <input id="dlg-text" class="text" placeholder="Своими словами…">
+      <div class="rating-block">
+        <div class="rating-label">Удовольствие</div>
+        <div class="rating" id="dlg-pleasure"></div>
+      </div>
+      <div class="rating-block">
+        <div class="rating-label">Важность</div>
+        <div class="rating" id="dlg-importance"></div>
+      </div>
+      <div class="dlg-actions">
+        <button id="dlg-cancel" class="ghost" type="button">Отмена</button>
+        <button id="dlg-save" class="primary" type="button">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
