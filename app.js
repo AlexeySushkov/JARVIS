@@ -2,7 +2,7 @@ import { clampRating } from './lib/slots.js';
 import { dayKey, todayKey, addDays, keyToDate } from './lib/dates.js';
 import { buildDayViewModel } from './lib/view.js';
 import { getDay, putDay, getAllDays } from './lib/storage.js';
-import { serializeHistory } from './lib/export.js';
+import { serializeHistory, serializeWeekDoc } from './lib/export.js';
 import { parseAnswer } from './lib/jarvis.js';
 
 // Публичный VAPID-ключ. Приватный ключ задаётся в env Vercel (VAPID_PRIVATE_KEY).
@@ -175,6 +175,17 @@ async function exportAs(format) {
   URL.revokeObjectURL(a.href);
 }
 
+async function exportWeek() {
+  const days = await getAllDays();
+  const content = serializeWeekDoc(days.slice(-7));
+  const blob = new Blob([content], { type: 'application/msword;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'jarvis-week.doc';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 function urlBase64ToUint8Array(base64) {
   const padding = '='.repeat((4 - (base64.length % 4)) % 4);
   const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -215,6 +226,7 @@ async function init() {
   document.getElementById('dlg-text').addEventListener('input', () => { state.chip = null; buildChips(); });
   document.getElementById('export-json').addEventListener('click', () => exportAs('json'));
   document.getElementById('export-csv').addEventListener('click', () => exportAs('csv'));
+  document.getElementById('export-doc').addEventListener('click', exportWeek);
 
   await render();
 

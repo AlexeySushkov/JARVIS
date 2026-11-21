@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { serializeHistory } from '../lib/export.js';
+import { serializeHistory, serializeWeekDoc } from '../lib/export.js';
 
 const records = [
   { date: '2026-11-20', mood: 7, slots: [
@@ -25,4 +25,19 @@ test('CSV: заголовок и строка с пустым слотом', () 
 test('JSON/CSV не ломаются на пустом массиве', () => {
   assert.equal(serializeHistory([], 'json'), '[]');
   assert.ok(serializeHistory([], 'csv').includes('date;slotId'));
+});
+
+test('serializeWeekDoc: HTML с таблицей и настроением', () => {
+  const doc = serializeWeekDoc([{ date: '2026-11-20', mood: 7, slots: [{ slotId: '6-7', activity: 'Сон', pleasure: 7, importance: 8 }] }]);
+  assert.ok(doc.startsWith('<html>'));
+  assert.ok(doc.includes('Дневник — неделя'));
+  assert.ok(doc.includes('Сон'));
+  assert.ok(doc.includes('Настроение дня: 7'));
+  assert.ok(doc.includes('Время'));
+});
+
+test('serializeWeekDoc: экранирует HTML', () => {
+  const doc = serializeWeekDoc([{ date: '2026-11-20', mood: null, slots: [{ slotId: '6-7', activity: '<script>', pleasure: null, importance: null }] }]);
+  assert.ok(doc.includes('&lt;script&gt;'));
+  assert.ok(!doc.includes('<script>'));
 });
