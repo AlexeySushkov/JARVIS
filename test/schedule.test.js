@@ -26,3 +26,10 @@ test('dueReminders: окно 5 минут — вне окна пусто', () =>
   assert.deepEqual(dueReminders(after, 180), []);
   assert.ok(REMINDER_WINDOW_MINUTES === 5);
 });
+
+test('тихие часы: 22-23 спрашивается в 22:55, в 23:00 пусто', () => {
+  const at2255 = Date.UTC(2026, 10, 21, 19, 55); // 22:55 при offset +180
+  assert.deepEqual(dueReminders(at2255, 180), [{ slotId: '22-23', targetDayKey: '2026-11-21' }]);
+  const at2300 = Date.UTC(2026, 10, 21, 20, 0); // 23:00
+  assert.deepEqual(dueReminders(at2300, 180), []);
+});

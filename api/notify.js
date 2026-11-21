@@ -15,7 +15,16 @@ export function buildPushPayload(reminder) {
   return { title: 'JARVIS', body, data: { slotId, targetDayKey } };
 }
 
+export function isCronAuthorized(headers, secret) {
+  if (!secret) return false;
+  const auth = (headers && headers.authorization) || '';
+  return auth === `Bearer ${secret}`;
+}
+
 export default async function handler(req, res) {
+  if (!isCronAuthorized(req.headers, process.env.CRON_SECRET)) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
   const publicKey = process.env.VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
   const subject = process.env.VAPID_SUBJECT || 'mailto:jarvis@example.com';
