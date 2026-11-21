@@ -11,7 +11,7 @@ const VAPID_PUBLIC_KEY = 'BF16OyIGb6GAxO-jYHR07H1PBRJ9FFp6Fm5Joe1zFSLLG3TF3up3hw
 const CHIPS = ['Сон', 'Еда', 'Сборы', 'Дорога', 'Школа', 'Домашка', 'Спорт', 'Прогулка', 'Хобби', 'Общение', 'Отдых', 'Игры/телефон', 'Другое'];
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
-const state = { date: todayKey(), slot: null, pleasure: null, importance: null };
+const state = { date: todayKey(), slot: null, chip: null, pleasure: null, importance: null };
 
 function hourLabel(hhmm) { return String(parseInt(hhmm.split(':')[0], 10)); }
 function timeLabel(s) { return `${hourLabel(s.start)}–${hourLabel(s.end)}`; }
@@ -107,15 +107,30 @@ async function render() {
   moodEl.appendChild(rating);
 }
 
+function renderPleasure() {
+  ratingButtons(document.getElementById('dlg-pleasure'), state.pleasure, (v) => {
+    state.pleasure = v;
+    renderPleasure();
+  });
+}
+
+function renderImportance() {
+  ratingButtons(document.getElementById('dlg-importance'), state.importance, (v) => {
+    state.importance = v;
+    renderImportance();
+  });
+}
+
 function openSlot(row) {
   state.slot = row;
+  state.chip = (row.activity && CHIPS.includes(row.activity)) ? row.activity : null;
   state.pleasure = row.pleasure;
   state.importance = row.importance;
   document.getElementById('dlg-title').textContent = `Что делала с ${hourLabel(row.start)} до ${hourLabel(row.end)}?`;
   document.getElementById('dlg-text').value = row.activity || '';
   buildChips();
-  ratingButtons(document.getElementById('dlg-pleasure'), state.pleasure, (v) => { state.pleasure = v; });
-  ratingButtons(document.getElementById('dlg-importance'), state.importance, (v) => { state.importance = v; });
+  renderPleasure();
+  renderImportance();
   document.getElementById('modal').hidden = false;
 }
 
@@ -126,8 +141,9 @@ function buildChips() {
     const b = document.createElement('button');
     b.textContent = c;
     b.type = 'button';
-    if (state.slot && state.slot.activity === c) b.classList.add('on');
+    if (state.chip === c) b.classList.add('on');
     b.addEventListener('click', () => {
+      state.chip = c;
       document.getElementById('dlg-text').value = c;
       buildChips();
     });
@@ -196,6 +212,7 @@ async function init() {
   document.getElementById('next').addEventListener('click', () => { state.date = addDays(state.date, 1); render(); });
   document.getElementById('dlg-cancel').addEventListener('click', closeDlg);
   document.getElementById('dlg-save').addEventListener('click', saveDlg);
+  document.getElementById('dlg-text').addEventListener('input', () => { state.chip = null; buildChips(); });
   document.getElementById('export-json').addEventListener('click', () => exportAs('json'));
   document.getElementById('export-csv').addEventListener('click', () => exportAs('csv'));
 
