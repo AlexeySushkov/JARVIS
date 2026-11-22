@@ -60,6 +60,14 @@ test('serializeWeekDocx: заголовок с датой, данные, пер�
   assert.ok(xml.includes('Настроение дня — 7'));
 });
 
+test('serializeWeekDocx: отступы внутри ячеек (текст не прилипает к рамке)', () => {
+  const docx = serializeWeekDocx([{ date: '2026-11-16', mood: null, slots: [] }]);
+  const xml = new TextDecoder().decode(readZip(docx)['word/document.xml']);
+  assert.ok(xml.includes('<w:tblCellMar>'));
+  assert.ok(xml.includes('<w:left w:w="108" w:type="dxa"/>'));
+  assert.ok(xml.includes('<w:top w:w="60" w:type="dxa"/>'));
+});
+
 test('serializeWeekDocx: фиксированная ширина столбцов', () => {
   const docx = serializeWeekDocx([{ date: '2026-11-16', mood: null, slots: [] }]);
   const xml = new TextDecoder().decode(readZip(docx)['word/document.xml']);
