@@ -14,8 +14,8 @@
       <div class="brand"><span class="dot"></span><span>JARVIS</span></div>
       <button id="orb" class="orb" type="button" aria-label="О приложении" title="О приложении"></button>
       <div class="export">
-        <button id="export-week" class="ghost" type="button">Сохранить неделю</button>
-        <button id="test-notify" class="ghost" type="button">Проверить нотификацию</button>
+        <button id="export-week" class="ghost" type="button">DOC</button>
+        <button id="notify-open" class="ghost" type="button">Notify</button>
       </div>
     </header>
 
@@ -63,6 +63,22 @@
       navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
     }
   </script>
+  <div class="modal" id="notify-modal" hidden>
+    <div class="dialog about-dialog">
+      <h2>Уведомления</h2>
+      <div class="about-row"><span>Разрешение</span><b id="notify-permission">—</b></div>
+      <div class="about-row"><span>Подписка</span><b id="notify-subscription">—</b></div>
+      <p class="notify-hint" id="notify-hint"></p>
+      <div class="dlg-actions">
+        <button id="notify-enable" class="ghost" type="button">Включить</button>
+        <button id="notify-test" class="primary" type="button">Проверить сейчас</button>
+      </div>
+      <div class="dlg-actions">
+        <button id="notify-close" class="ghost" type="button">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal" id="about" hidden>
     <div class="dialog about-dialog">
       <h2>О приложении</h2>
@@ -75,6 +91,6 @@
     </div>
   </div>
 
-  <script type="module" src="app.js?v=9"></script>
+  <script type="module" src="app.js?v=10"></script>
 </body>
 </html>

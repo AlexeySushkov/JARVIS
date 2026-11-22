@@ -1,8 +1,8 @@
-const CACHE = 'jarvis-v9';
+const CACHE = 'jarvis-v10';
 const ASSETS = [
-  '/', '/index.html', '/styles.css', '/app.js?v=9',
+  '/', '/index.html', '/styles.css', '/app.js?v=10',
   '/lib/slots.js', '/lib/dates.js', '/lib/view.js', '/lib/storage.js',
-  '/lib/export.js', '/lib/jarvis.js', '/lib/version.js',
+  '/lib/export.js', '/lib/jarvis.js', '/lib/version.js', '/lib/notify-ui.js',
 ];
 
 self.addEventListener('install', (e) => {

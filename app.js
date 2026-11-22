@@ -5,8 +5,9 @@ import { getDay, putDay } from './lib/storage.js';
 import { serializeWeekDoc } from './lib/export.js';
 import { parseAnswer } from './lib/jarvis.js';
 import { formatBuild } from './lib/version.js';
+import { permissionLabel } from './lib/notify-ui.js';
 
-const APP_VERSION = 'v1.1.0';
+const APP_VERSION = 'v1.2.0';
 
 // Публичный VAPID-ключ. Приватный ключ задаётся в env Vercel (VAPID_PRIVATE_KEY).
 const VAPID_PUBLIC_KEY = 'BF16OyIGb6GAxO-jYHR07H1PBRJ9FFp6Fm5Joe1zFSLLG3TF3up3hwuhNs9To1DGheQ4pyGKzNKh6Q1nDXytxno';
@@ -196,11 +197,17 @@ function urlBase64ToUint8Array(base64) {
   return arr;
 }
 
+async function getExistingSubscription() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+  const reg = await navigator.serviceWorker.ready;
+  return reg.pushManager.getSubscription();
+}
+
 async function ensureSubscription() {
   if (!VAPID_PUBLIC_KEY || !('serviceWorker' in navigator) || !('PushManager' in window)) return null;
-  const reg = await navigator.serviceWorker.ready;
-  let sub = await reg.pushManager.getSubscription();
+  let sub = await getExistingSubscription();
   if (!sub) {
+    const reg = await navigator.serviceWorker.ready;
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
@@ -224,46 +231,72 @@ async function registerPush() {
   }
 }
 
-async function testNotify() {
-  const btn = document.getElementById('test-notify');
-  const label = btn.textContent;
-  let message = 'Ошибка';
+async function sendTestPush() {
   try {
-    if (!('Notification' in window)) {
-      message = 'Нет поддержки';
-    } else {
-      if (Notification.permission === 'default') {
-        await Notification.requestPermission();
-      }
-      if (Notification.permission !== 'granted') {
-        message = 'Уведомления запрещены';
-      } else {
-        const sub = await ensureSubscription();
-        if (!sub) {
-          message = 'Нет подписки';
-        } else {
-          const res = await fetch('/api/test-notify', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ subscription: sub }),
-          });
-          if (res.status === 404) {
-            message = 'Только на Vercel';
-          } else if (!res.ok) {
-            message = `Ошибка ${res.status}`;
-          } else {
-            const data = await res.json();
-            message = data.sent ? 'Отправлено ✓' : 'Не доставлено';
-          }
-        }
-      }
-    }
+    const sub = await getExistingSubscription();
+    if (!sub) return 'Нет подписки — нажмите «Включить»';
+    const res = await fetch('/api/test-notify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ subscription: sub }),
+    });
+    if (res.status === 404) return 'Только на Vercel';
+    if (!res.ok) return `Ошибка ${res.status}`;
+    const data = await res.json();
+    return data.sent ? 'Отправлено ✓' : 'Не доставлено';
   } catch (err) {
     console.warn('test notify failed', err);
-    message = 'Ошибка: ' + String(err && err.name ? err.name : 'unknown');
+    return 'Ошибка: ' + String(err && err.name ? err.name : 'unknown');
   }
-  btn.textContent = message;
-  setTimeout(() => { btn.textContent = label; }, 4000);
+}
+
+function setNotifyHint(text) {
+  document.getElementById('notify-hint').textContent = text;
+}
+
+async function refreshNotifyPanel() {
+  const permission = 'Notification' in window ? Notification.permission : 'unsupported';
+  document.getElementById('notify-permission').textContent = permissionLabel(permission);
+
+  let sub = null;
+  try { sub = await getExistingSubscription(); } catch (err) { sub = null; }
+  document.getElementById('notify-subscription').textContent = sub ? 'активна' : 'нет';
+
+  const enable = document.getElementById('notify-enable');
+  enable.hidden = !!(sub && permission === 'granted');
+  if (permission === 'denied') {
+    setNotifyHint('Уведомления запрещены в настройках сайта (Chrome → сайт → Уведомления).');
+  } else if (!sub) {
+    setNotifyHint('Нажмите «Включить», чтобы разрешить уведомления на этом устройстве.');
+  } else {
+    setNotifyHint('');
+  }
+}
+
+async function openNotify() {
+  document.getElementById('notify-modal').hidden = false;
+  await refreshNotifyPanel();
+}
+
+async function enableNotify() {
+  try {
+    if (!('Notification' in window)) { setNotifyHint('Браузер не поддерживает уведомления.'); return; }
+    if (Notification.permission !== 'granted') {
+      await Notification.requestPermission();
+    }
+    if (Notification.permission !== 'granted') {
+      setNotifyHint('Разрешение не выдано — уведомления включить нельзя.');
+      return;
+    }
+    await registerPush();
+    await refreshNotifyPanel();
+    if (document.getElementById('notify-subscription').textContent === 'активна') {
+      setNotifyHint('Уведомления включены ✓');
+    }
+  } catch (err) {
+    console.warn('enable notify failed', err);
+    setNotifyHint('Ошибка: ' + String(err && err.name ? err.name : 'unknown'));
+  }
 }
 
 async function openAbout() {
@@ -306,7 +339,16 @@ async function init() {
   document.getElementById('dlg-save').addEventListener('click', saveDlg);
   document.getElementById('dlg-text').addEventListener('input', () => { state.chip = null; buildChips(); });
   document.getElementById('export-week').addEventListener('click', exportWeek);
-  document.getElementById('test-notify').addEventListener('click', testNotify);
+  document.getElementById('notify-open').addEventListener('click', openNotify);
+  document.getElementById('notify-enable').addEventListener('click', enableNotify);
+  document.getElementById('notify-test').addEventListener('click', async () => {
+    setNotifyHint('Отправка…');
+    setNotifyHint(await sendTestPush());
+  });
+  document.getElementById('notify-close').addEventListener('click', () => { document.getElementById('notify-modal').hidden = true; });
+  document.getElementById('notify-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'notify-modal') document.getElementById('notify-modal').hidden = true;
+  });
   document.getElementById('orb').addEventListener('click', openAbout);
   document.getElementById('about-close').addEventListener('click', () => { document.getElementById('about').hidden = true; });
   document.getElementById('about').addEventListener('click', (e) => {
