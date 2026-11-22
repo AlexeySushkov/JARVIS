@@ -58,7 +58,8 @@ body {
   box-shadow: 0 0 22px rgba(130, 215, 255, .55), inset 0 0 12px rgba(255, 255, 255, .25);
 }
 
-.export { display: flex; gap: 6px; }
+.export { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.export .ghost { font-size: 11px; padding: 6px 9px; }
 
 .ghost {
   background: transparent;

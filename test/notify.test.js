@@ -3,13 +3,12 @@ import assert from 'node:assert/strict';
 import { buildPushPayload, isCronAuthorized } from '../api/notify.js';
 import { addSubscription } from '../api/subscribe.js';
 
-test('buildPushPayload: текст по слоту и mood', () => {
-  const slot = buildPushPayload({ slotId: '6-7', targetDayKey: '2026-11-21' });
-  assert.equal(slot.title, 'JARVIS');
-  assert.ok(slot.body.includes('6 до 7'));
-  assert.equal(slot.data.slotId, '6-7');
-  const mood = buildPushPayload({ slotId: 'mood', targetDayKey: '2026-11-21' });
-  assert.ok(mood.body.includes('настроение'));
+test('buildPushPayload: суточное напоминание с датой дня', () => {
+  const p = buildPushPayload('2026-11-22');
+  assert.equal(p.title, 'JARVIS');
+  assert.ok(p.body.includes('Заполни дневник'));
+  assert.equal(p.data.targetDayKey, '2026-11-22');
+  assert.equal(p.data.slotId, 'mood');
 });
 
 test('isCronAuthorized: требует Bearer-секрет', () => {

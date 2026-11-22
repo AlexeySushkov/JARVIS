@@ -1,8 +1,8 @@
 import { clampRating } from './lib/slots.js';
 import { dayKey, todayKey, addDays, keyToDate } from './lib/dates.js';
 import { buildDayViewModel } from './lib/view.js';
-import { getDay, putDay, getAllDays } from './lib/storage.js';
-import { serializeHistory, serializeWeekDoc } from './lib/export.js';
+import { getDay, putDay } from './lib/storage.js';
+import { serializeWeekDoc } from './lib/export.js';
 import { parseAnswer } from './lib/jarvis.js';
 
 // Публичный VAPID-ключ. Приватный ключ задаётся в env Vercel (VAPID_PRIVATE_KEY).
@@ -164,24 +164,18 @@ async function saveDlg() {
   render();
 }
 
-async function exportAs(format) {
-  const days = await getAllDays();
-  const content = serializeHistory(days, format);
-  const blob = new Blob([content], { type: format === 'csv' ? 'text/csv;charset=utf-8' : 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = format === 'csv' ? 'jarvis-history.csv' : 'jarvis-history.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
 async function exportWeek() {
-  const days = await getAllDays();
-  const content = serializeWeekDoc(days.slice(-7));
+  const monday = mondayOf(todayKey());
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const key = addDays(monday, i);
+    days.push((await getDay(key)) || { date: key, mood: null, slots: [] });
+  }
+  const content = serializeWeekDoc(days);
   const blob = new Blob([content], { type: 'application/msword;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'jarvis-week.doc';
+  a.download = `Дневник_JARVIS_${monday}_${addDays(monday, 6)}.doc`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
@@ -195,8 +189,8 @@ function urlBase64ToUint8Array(base64) {
   return arr;
 }
 
-async function registerPush() {
-  if (!VAPID_PUBLIC_KEY || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+async function ensureSubscription() {
+  if (!VAPID_PUBLIC_KEY || !('serviceWorker' in navigator) || !('PushManager' in window)) return null;
   const reg = await navigator.serviceWorker.ready;
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {
@@ -205,12 +199,43 @@ async function registerPush() {
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
     });
   }
-  const offsetMinutes = -new Date().getTimezoneOffset();
-  await fetch('/api/subscribe', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ subscription: sub, offsetMinutes }),
-  });
+  return sub;
+}
+
+async function registerPush() {
+  try {
+    const sub = await ensureSubscription();
+    if (!sub) return;
+    const offsetMinutes = -new Date().getTimezoneOffset();
+    await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ subscription: sub, offsetMinutes }),
+    });
+  } catch (err) {
+    console.warn('push setup failed', err);
+  }
+}
+
+async function testNotify() {
+  const btn = document.getElementById('test-notify');
+  const label = btn.textContent;
+  try {
+    const sub = await ensureSubscription();
+    if (!sub) { btn.textContent = 'Нет подписки'; }
+    else {
+      const res = await fetch('/api/test-notify', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ subscription: sub }),
+      });
+      const data = await res.json();
+      btn.textContent = data.sent ? 'Отправлено ✓' : 'Не доставлено';
+    }
+  } catch (err) {
+    btn.textContent = 'Ошибка';
+  }
+  setTimeout(() => { btn.textContent = label; }, 2500);
 }
 
 async function init() {
@@ -224,9 +249,8 @@ async function init() {
   document.getElementById('dlg-cancel').addEventListener('click', closeDlg);
   document.getElementById('dlg-save').addEventListener('click', saveDlg);
   document.getElementById('dlg-text').addEventListener('input', () => { state.chip = null; buildChips(); });
-  document.getElementById('export-json').addEventListener('click', () => exportAs('json'));
-  document.getElementById('export-csv').addEventListener('click', () => exportAs('csv'));
-  document.getElementById('export-doc').addEventListener('click', exportWeek);
+  document.getElementById('export-week').addEventListener('click', exportWeek);
+  document.getElementById('test-notify').addEventListener('click', testNotify);
 
   await render();
 

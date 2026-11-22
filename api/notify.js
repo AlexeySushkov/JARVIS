@@ -1,7 +1,6 @@
 import { setVapidDetails, sendNotification } from 'web-push';
 import { Redis } from '@upstash/redis';
-import { dueReminders } from '../lib/schedule.js';
-import { SLOTS } from '../lib/slots.js';
+import { localDayKeyFromUtc } from '../lib/dates.js';
 
 let redisClient = null;
 function redis() {
@@ -9,16 +8,12 @@ function redis() {
   return redisClient;
 }
 
-function hourLabel(hhmm) { return String(parseInt(hhmm.split(':')[0], 10)); }
-
-export function buildPushPayload(reminder) {
-  const { slotId, targetDayKey } = reminder;
-  if (slotId === 'mood') {
-    return { title: 'JARVIS', body: 'Оцени настроение дня 0–10', data: { slotId, targetDayKey } };
-  }
-  const slot = SLOTS.find((s) => s.id === slotId);
-  const body = slot ? `Что делала с ${hourLabel(slot.start)} до ${hourLabel(slot.end)}?` : 'Заполни слот дня';
-  return { title: 'JARVIS', body, data: { slotId, targetDayKey } };
+export function buildPushPayload(targetDayKey) {
+  return {
+    title: 'JARVIS',
+    body: 'Как прошёл день? Заполни дневник.',
+    data: { slotId: 'mood', targetDayKey },
+  };
 }
 
 export function isCronAuthorized(headers, secret) {
@@ -42,18 +37,15 @@ export default async function handler(req, res) {
   const subs = (await redis().get('push:subscriptions')) || [];
   const nowUtc = Date.now();
   const sent = [];
-  let skipped = 0;
+  let failed = 0;
   for (const entry of subs) {
-    const due = dueReminders(nowUtc, entry.offsetMinutes || 0);
-    if (due.length === 0) { skipped += 1; continue; }
-    for (const reminder of due) {
-      try {
-        await sendNotification(entry.subscription, JSON.stringify(buildPushPayload(reminder)));
-        sent.push({ slotId: reminder.slotId, targetDayKey: reminder.targetDayKey });
-      } catch (err) {
-        skipped += 1;
-      }
+    const targetDayKey = localDayKeyFromUtc(nowUtc, entry.offsetMinutes || 0);
+    try {
+      await sendNotification(entry.subscription, JSON.stringify(buildPushPayload(targetDayKey)));
+      sent.push({ targetDayKey });
+    } catch (err) {
+      failed += 1;
     }
   }
-  return res.status(200).json({ sent, skipped });
+  return res.status(200).json({ sent, failed });
 }
