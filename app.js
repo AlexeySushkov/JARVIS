@@ -244,7 +244,9 @@ async function testNotify() {
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ subscription: sub }),
           });
-          if (!res.ok) {
+          if (res.status === 404) {
+            message = 'Только на Vercel';
+          } else if (!res.ok) {
             message = `Ошибка ${res.status}`;
           } else {
             const data = await res.json();
@@ -255,7 +257,7 @@ async function testNotify() {
     }
   } catch (err) {
     console.warn('test notify failed', err);
-    message = 'Ошибка: ' + String(err && err.name ? err.name : err);
+    message = 'Ошибка: ' + String(err && err.name ? err.name : 'unknown');
   }
   btn.textContent = message;
   setTimeout(() => { btn.textContent = label; }, 4000);

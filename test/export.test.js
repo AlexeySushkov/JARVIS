@@ -20,6 +20,12 @@ test('serializeWeekDoc: все 7 дней недели, включая пуст�
   }
 });
 
+test('serializeWeekDoc: после дня недели стоит дата', () => {
+  const doc = serializeWeekDoc(week);
+  assert.ok(doc.includes('Понедельник 16.11.2026'));
+  assert.ok(doc.includes('Воскресенье 22.11.2026'));
+});
+
 test('serializeWeekDoc: колонки как в образце и все 14 слотов', () => {
   const doc = serializeWeekDoc(week);
   assert.ok(doc.includes('Время'));
