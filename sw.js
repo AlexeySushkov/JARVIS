@@ -1,6 +1,6 @@
-const CACHE = 'jarvis-v4';
+const CACHE = 'jarvis-v5';
 const ASSETS = [
-  '/', '/index.html', '/styles.css', '/app.js',
+  '/', '/index.html', '/styles.css', '/app.js?v=5',
   '/lib/slots.js', '/lib/dates.js', '/lib/view.js', '/lib/storage.js',
   '/lib/export.js', '/lib/jarvis.js',
 ];
@@ -13,17 +13,26 @@ self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
+// Сеть в приоритете: пользователь всегда получает свежий код, кэш — только офлайн.
 self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET') return;
-  if (e.request.mode === 'navigate') {
-    e.respondWith(fetch(e.request).then((res) => {
-      const copy = res.clone();
-      caches.open(CACHE).then((c) => c.put('/', copy));
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+
+  e.respondWith(
+    fetch(req).then((res) => {
+      if (res && res.ok) {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+      }
       return res;
-    }).catch(() => caches.match('/')));
-    return;
-  }
-  e.respondWith(caches.match(e.request).then((cached) => cached || fetch(e.request)));
+    }).catch(() => caches.match(req).then((cached) => {
+      if (cached) return cached;
+      if (req.mode === 'navigate') return caches.match('/');
+      return Response.error();
+    }))
+  );
 });
 
 self.addEventListener('push', (e) => {

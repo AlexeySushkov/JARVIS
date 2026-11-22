@@ -174,10 +174,14 @@ async function exportWeek() {
   const content = serializeWeekDoc(days);
   const blob = new Blob([content], { type: 'application/msword;charset=utf-8' });
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
+  a.href = url;
   a.download = `Дневник_JARVIS_${monday}_${addDays(monday, 6)}.doc`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(a.href);
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
 function urlBase64ToUint8Array(base64) {
