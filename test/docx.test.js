@@ -60,6 +60,13 @@ test('serializeWeekDocx: заголовок с датой, данные, пер�
   assert.ok(xml.includes('Настроение дня — 7'));
 });
 
+test('serializeWeekDocx: заголовок дня крупным шрифтом', () => {
+  const docx = serializeWeekDocx([{ date: '2026-11-16', mood: null, slots: [] }]);
+  const xml = new TextDecoder().decode(readZip(docx)['word/document.xml']);
+  assert.ok(xml.includes('<w:sz w:val="28"/>'));
+  assert.ok(xml.includes('<w:szCs w:val="28"/>'));
+});
+
 test('serializeWeekDocx: отступы внутри ячеек (текст не прилипает к рамке)', () => {
   const docx = serializeWeekDocx([{ date: '2026-11-16', mood: null, slots: [] }]);
   const xml = new TextDecoder().decode(readZip(docx)['word/document.xml']);

@@ -7,7 +7,7 @@ import { parseAnswer } from './lib/jarvis.js';
 import { formatBuild } from './lib/version.js';
 import { permissionLabel, formatSchedule } from './lib/notify-ui.js';
 
-const APP_VERSION = 'v1.4.2';
+const APP_VERSION = 'v1.4.3';
 
 // Расписание уведомлений: синхронизировано с vercel.json ("0 17 * * *").
 const NOTIFY_HOUR_UTC = 17;
