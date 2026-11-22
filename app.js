@@ -2,12 +2,12 @@ import { clampRating } from './lib/slots.js';
 import { dayKey, todayKey, addDays, keyToDate } from './lib/dates.js';
 import { buildDayViewModel } from './lib/view.js';
 import { getDay, putDay } from './lib/storage.js';
-import { serializeWeekDoc, serializeWeekDocx } from './lib/export.js';
+import { serializeWeekDocx } from './lib/export.js';
 import { parseAnswer } from './lib/jarvis.js';
 import { formatBuild } from './lib/version.js';
 import { permissionLabel, formatSchedule } from './lib/notify-ui.js';
 
-const APP_VERSION = 'v1.4.3';
+const APP_VERSION = 'v1.5.0';
 
 // Расписание уведомлений: синхронизировано с vercel.json ("0 17 * * *").
 const NOTIFY_HOUR_UTC = 17;
@@ -194,12 +194,6 @@ function downloadBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-async function exportWeek() {
-  const { monday, days } = await currentWeekDays();
-  const content = serializeWeekDoc(days);
-  downloadBlob(new Blob([content], { type: 'application/msword;charset=utf-8' }), `Дневник_JARVIS_${monday}_${addDays(monday, 6)}.doc`);
-}
-
 async function exportWeekDocx() {
   const { monday, days } = await currentWeekDays();
   const content = serializeWeekDocx(days);
@@ -358,7 +352,6 @@ async function init() {
   document.getElementById('dlg-cancel').addEventListener('click', closeDlg);
   document.getElementById('dlg-save').addEventListener('click', saveDlg);
   document.getElementById('dlg-text').addEventListener('input', () => { state.chip = null; buildChips(); });
-  document.getElementById('export-week').addEventListener('click', exportWeek);
   document.getElementById('export-docx').addEventListener('click', exportWeekDocx);
   document.getElementById('notify-open').addEventListener('click', openNotify);
   document.getElementById('notify-enable').addEventListener('click', enableNotify);
