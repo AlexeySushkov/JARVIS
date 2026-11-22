@@ -2,12 +2,12 @@ import { clampRating } from './lib/slots.js';
 import { dayKey, todayKey, addDays, keyToDate } from './lib/dates.js';
 import { buildDayViewModel } from './lib/view.js';
 import { getDay, putDay } from './lib/storage.js';
-import { serializeWeekDoc } from './lib/export.js';
+import { serializeWeekDoc, serializeWeekDocx } from './lib/export.js';
 import { parseAnswer } from './lib/jarvis.js';
 import { formatBuild } from './lib/version.js';
 import { permissionLabel, formatSchedule } from './lib/notify-ui.js';
 
-const APP_VERSION = 'v1.3.0';
+const APP_VERSION = 'v1.4.0';
 
 // Расписание уведомлений: синхронизировано с vercel.json ("0 17 * * *").
 const NOTIFY_HOUR_UTC = 17;
@@ -172,24 +172,38 @@ async function saveDlg() {
   render();
 }
 
-async function exportWeek() {
+async function currentWeekDays() {
   const monday = mondayOf(todayKey());
   const days = [];
   for (let i = 0; i < 7; i++) {
     const key = addDays(monday, i);
     days.push((await getDay(key)) || { date: key, mood: null, slots: [] });
   }
-  const content = serializeWeekDoc(days);
-  const blob = new Blob([content], { type: 'application/msword;charset=utf-8' });
+  return { monday, days };
+}
+
+function downloadBlob(blob, filename) {
   const a = document.createElement('a');
   const url = URL.createObjectURL(blob);
   a.href = url;
-  a.download = `Дневник_JARVIS_${monday}_${addDays(monday, 6)}.doc`;
+  a.download = filename;
   a.style.display = 'none';
   document.body.appendChild(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+async function exportWeek() {
+  const { monday, days } = await currentWeekDays();
+  const content = serializeWeekDoc(days);
+  downloadBlob(new Blob([content], { type: 'application/msword;charset=utf-8' }), `Дневник_JARVIS_${monday}_${addDays(monday, 6)}.doc`);
+}
+
+async function exportWeekDocx() {
+  const { monday, days } = await currentWeekDays();
+  const content = serializeWeekDocx(days);
+  downloadBlob(new Blob([content], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), `Дневник_JARVIS_${monday}_${addDays(monday, 6)}.docx`);
 }
 
 function urlBase64ToUint8Array(base64) {
@@ -345,6 +359,7 @@ async function init() {
   document.getElementById('dlg-save').addEventListener('click', saveDlg);
   document.getElementById('dlg-text').addEventListener('input', () => { state.chip = null; buildChips(); });
   document.getElementById('export-week').addEventListener('click', exportWeek);
+  document.getElementById('export-docx').addEventListener('click', exportWeekDocx);
   document.getElementById('notify-open').addEventListener('click', openNotify);
   document.getElementById('notify-enable').addEventListener('click', enableNotify);
   document.getElementById('notify-test').addEventListener('click', async () => {
