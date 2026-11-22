@@ -224,22 +224,41 @@ async function registerPush() {
 async function testNotify() {
   const btn = document.getElementById('test-notify');
   const label = btn.textContent;
+  let message = 'Ошибка';
   try {
-    const sub = await ensureSubscription();
-    if (!sub) { btn.textContent = 'Нет подписки'; }
-    else {
-      const res = await fetch('/api/test-notify', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ subscription: sub }),
-      });
-      const data = await res.json();
-      btn.textContent = data.sent ? 'Отправлено ✓' : 'Не доставлено';
+    if (!('Notification' in window)) {
+      message = 'Нет поддержки';
+    } else {
+      if (Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+      if (Notification.permission !== 'granted') {
+        message = 'Уведомления запрещены';
+      } else {
+        const sub = await ensureSubscription();
+        if (!sub) {
+          message = 'Нет подписки';
+        } else {
+          const res = await fetch('/api/test-notify', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ subscription: sub }),
+          });
+          if (!res.ok) {
+            message = `Ошибка ${res.status}`;
+          } else {
+            const data = await res.json();
+            message = data.sent ? 'Отправлено ✓' : 'Не доставлено';
+          }
+        }
+      }
     }
   } catch (err) {
-    btn.textContent = 'Ошибка';
+    console.warn('test notify failed', err);
+    message = 'Ошибка: ' + String(err && err.name ? err.name : err);
   }
-  setTimeout(() => { btn.textContent = label; }, 2500);
+  btn.textContent = message;
+  setTimeout(() => { btn.textContent = label; }, 4000);
 }
 
 async function init() {

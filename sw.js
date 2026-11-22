@@ -1,6 +1,6 @@
-const CACHE = 'jarvis-v5';
+const CACHE = 'jarvis-v6';
 const ASSETS = [
-  '/', '/index.html', '/styles.css', '/app.js?v=5',
+  '/', '/index.html', '/styles.css', '/app.js?v=6',
   '/lib/slots.js', '/lib/dates.js', '/lib/view.js', '/lib/storage.js',
   '/lib/export.js', '/lib/jarvis.js',
 ];
