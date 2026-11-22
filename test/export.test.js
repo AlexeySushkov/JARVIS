@@ -44,6 +44,12 @@ test('serializeWeekDoc: данные и настроение на месте, п
   assert.ok(doc.includes('Настроение дня — 5'));
 });
 
+test('serializeWeekDoc: сохраняет переносы строк в «Деле»', () => {
+  const doc = serializeWeekDoc([{ date: '2026-11-20', mood: null, slots: [{ slotId: '6-7', activity: 'Сон\nЗавтрак', pleasure: null, importance: null }] }]);
+  assert.ok(doc.includes('Сон\nЗавтрак'));
+  assert.ok(doc.includes('white-space:pre-line'));
+});
+
 test('serializeWeekDoc: экранирует HTML', () => {
   const doc = serializeWeekDoc([{ date: '2026-11-20', mood: null, slots: [{ slotId: '6-7', activity: '<script>', pleasure: null, importance: null }] }]);
   assert.ok(doc.includes('&lt;script&gt;'));
