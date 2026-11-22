@@ -5,9 +5,13 @@ import { getDay, putDay } from './lib/storage.js';
 import { serializeWeekDoc } from './lib/export.js';
 import { parseAnswer } from './lib/jarvis.js';
 import { formatBuild } from './lib/version.js';
-import { permissionLabel } from './lib/notify-ui.js';
+import { permissionLabel, formatSchedule } from './lib/notify-ui.js';
 
-const APP_VERSION = 'v1.2.0';
+const APP_VERSION = 'v1.3.0';
+
+// Расписание уведомлений: синхронизировано с vercel.json ("0 17 * * *").
+const NOTIFY_HOUR_UTC = 17;
+const NOTIFY_MINUTE_UTC = 0;
 
 // Публичный VAPID-ключ. Приватный ключ задаётся в env Vercel (VAPID_PRIVATE_KEY).
 const VAPID_PUBLIC_KEY = 'BF16OyIGb6GAxO-jYHR07H1PBRJ9FFp6Fm5Joe1zFSLLG3TF3up3hwuhNs9To1DGheQ4pyGKzNKh6Q1nDXytxno';
@@ -257,6 +261,8 @@ function setNotifyHint(text) {
 async function refreshNotifyPanel() {
   const permission = 'Notification' in window ? Notification.permission : 'unsupported';
   document.getElementById('notify-permission').textContent = permissionLabel(permission);
+  document.getElementById('notify-schedule').textContent =
+    `каждый день в ${formatSchedule(NOTIFY_HOUR_UTC, NOTIFY_MINUTE_UTC, -new Date().getTimezoneOffset())}`;
 
   let sub = null;
   try { sub = await getExistingSubscription(); } catch (err) { sub = null; }
