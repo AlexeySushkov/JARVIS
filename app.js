@@ -4,6 +4,9 @@ import { buildDayViewModel } from './lib/view.js';
 import { getDay, putDay } from './lib/storage.js';
 import { serializeWeekDoc } from './lib/export.js';
 import { parseAnswer } from './lib/jarvis.js';
+import { formatBuild } from './lib/version.js';
+
+const APP_VERSION = 'v1.0.0';
 
 // Публичный VAPID-ключ. Приватный ключ задаётся в env Vercel (VAPID_PRIVATE_KEY).
 const VAPID_PUBLIC_KEY = 'BF16OyIGb6GAxO-jYHR07H1PBRJ9FFp6Fm5Joe1zFSLLG3TF3up3hwuhNs9To1DGheQ4pyGKzNKh6Q1nDXytxno';
@@ -263,6 +266,34 @@ async function testNotify() {
   setTimeout(() => { btn.textContent = label; }, 4000);
 }
 
+async function openAbout() {
+  const about = document.getElementById('about');
+  document.getElementById('about-version').textContent = APP_VERSION;
+  document.getElementById('about-build').textContent = '…';
+  document.getElementById('about-cache').textContent = '…';
+  about.hidden = false;
+
+  try {
+    const res = await fetch('/api/version');
+    if (res.ok) {
+      const info = await res.json();
+      document.getElementById('about-build').textContent = formatBuild(info) || 'нет данных';
+    } else {
+      document.getElementById('about-build').textContent = res.status === 404 ? 'локально' : `ошибка ${res.status}`;
+    }
+  } catch (err) {
+    document.getElementById('about-build').textContent = 'нет данных';
+  }
+
+  try {
+    const swText = await (await fetch('/sw.js')).text();
+    const m = swText.match(/const CACHE = '([^']+)'/);
+    document.getElementById('about-cache').textContent = m ? m[1] : '—';
+  } catch (err) {
+    document.getElementById('about-cache').textContent = '—';
+  }
+}
+
 async function init() {
   const params = new URLSearchParams(location.search);
   const dateParam = params.get('date');
@@ -276,6 +307,11 @@ async function init() {
   document.getElementById('dlg-text').addEventListener('input', () => { state.chip = null; buildChips(); });
   document.getElementById('export-week').addEventListener('click', exportWeek);
   document.getElementById('test-notify').addEventListener('click', testNotify);
+  document.getElementById('orb').addEventListener('click', openAbout);
+  document.getElementById('about-close').addEventListener('click', () => { document.getElementById('about').hidden = true; });
+  document.getElementById('about').addEventListener('click', (e) => {
+    if (e.target.id === 'about') document.getElementById('about').hidden = true;
+  });
 
   await render();
 

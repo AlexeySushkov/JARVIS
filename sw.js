@@ -1,8 +1,8 @@
-const CACHE = 'jarvis-v7';
+const CACHE = 'jarvis-v8';
 const ASSETS = [
-  '/', '/index.html', '/styles.css', '/app.js?v=7',
+  '/', '/index.html', '/styles.css', '/app.js?v=8',
   '/lib/slots.js', '/lib/dates.js', '/lib/view.js', '/lib/storage.js',
-  '/lib/export.js', '/lib/jarvis.js',
+  '/lib/export.js', '/lib/jarvis.js', '/lib/version.js',
 ];
 
 self.addEventListener('install', (e) => {

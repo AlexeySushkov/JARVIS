@@ -54,9 +54,26 @@ body {
   width: 46px;
   height: 46px;
   border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   background: radial-gradient(circle at 34% 28%, #d8f4ff, #6fd0f5 42%, #1f7fb8 78%, rgba(20, 80, 120, .5));
   box-shadow: 0 0 22px rgba(130, 215, 255, .55), inset 0 0 12px rgba(255, 255, 255, .25);
 }
+
+.orb:active { transform: scale(.95); }
+
+.about-dialog { max-width: 340px; }
+
+.about-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.about-row b { color: var(--text); font-weight: 600; text-align: right; }
 
 .export { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .export .ghost { font-size: 11px; padding: 6px 9px; }

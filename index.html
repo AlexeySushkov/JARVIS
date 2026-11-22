@@ -12,7 +12,7 @@
   <div class="app">
     <header class="top">
       <div class="brand"><span class="dot"></span><span>JARVIS</span></div>
-      <div class="orb"></div>
+      <button id="orb" class="orb" type="button" aria-label="О приложении" title="О приложении"></button>
       <div class="export">
         <button id="export-week" class="ghost" type="button">Сохранить неделю</button>
         <button id="test-notify" class="ghost" type="button">Проверить нотификацию</button>
@@ -63,6 +63,18 @@
       navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
     }
   </script>
-  <script type="module" src="app.js?v=7"></script>
+  <div class="modal" id="about" hidden>
+    <div class="dialog about-dialog">
+      <h2>О приложении</h2>
+      <div class="about-row"><span>Версия</span><b id="about-version">—</b></div>
+      <div class="about-row"><span>Сборка</span><b id="about-build">—</b></div>
+      <div class="about-row"><span>Кэш</span><b id="about-cache">—</b></div>
+      <div class="dlg-actions">
+        <button id="about-close" class="primary" type="button">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js?v=8"></script>
 </body>
 </html>

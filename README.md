@@ -102,6 +102,16 @@ vercel deploy --prod
   Ответ: `{"sent":N,"failed":N,"total":N}`.
 - **Сбросить устройства:** в Upstash CLI `DEL push:subscriptions`, затем заново открыть приложение на нужных устройствах.
 
+## Версия приложения
+
+Тап по светящемуся **ядру** в шапке открывает панель «О приложении»:
+
+- **Версия** — `APP_VERSION` из `app.js` (ведётся вручную);
+- **Сборка** — короткий хеш коммита и дата, автоматически через `/api/version` (Vercel подставляет `VERCEL_GIT_COMMIT_SHA`, дата берётся из GitHub);
+- **Кэш** — имя кэша service worker (`jarvis-vN`), показывающее, свежий ли код у устройства.
+
+При выпуске изменений поднимайте вместе: `APP_VERSION` в `app.js`, `CACHE` в `sw.js` и `app.js?v=N` в `index.html` и `sw.js`.
+
 ## Данные и выгрузка
 
 История хранится только в браузере телефона. В шапке — две кнопки:
@@ -113,6 +123,6 @@ vercel deploy --prod
 
 - `index.html`, `styles.css`, `app.js` — фронтенд (без фреймворков и сборки).
 - `lib/*` — чистая логика (слоты, даты, расписание, хранилище, выгрузка, шов под LLM).
-- `api/subscribe.js`, `api/notify.js`, `api/test-notify.js` — serverless-функции Vercel (подписки в Upstash Redis, суточное напоминание, тестовый push).
+- `api/subscribe.js`, `api/notify.js`, `api/test-notify.js`, `api/version.js` — serverless-функции Vercel (подписки в Upstash Redis, суточное напоминание, тестовый push, версия сборки).
 - `sw.js` — service worker (кэш + показ уведомлений).
 - `vercel.json` — суточный cron (`0 17 * * *`).
